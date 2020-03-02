@@ -190,8 +190,10 @@ class tls_ticket_auth(plain.plain):
 
     def decode_error_return(self, buf):
         self.handshake_status = -1
+        if self.overhead > 0:
+            self.server_info.overhead -= self.overhead
         self.overhead = 0
-        if self.method == 'tls1.2_ticket_auth':
+        if self.method == 'tls1.2_ticket_auth' or self.method == 'tls1.2_ticket_fastauth':
             return (b'E'*2048, False, False)
         return (buf, True, False)
 
@@ -299,7 +301,7 @@ class tls_ticket_auth(plain.plain):
 
         buf = buf[48:]
 
-        host_name = ''
+        host_name = b''
         for index in range(len(buf)):
             if index + 4 < len(buf):
                 if buf[index:index + 4] == b"\x00\x17\x00\x00":
